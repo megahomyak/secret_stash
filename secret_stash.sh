@@ -10,10 +10,10 @@ temp="$(mktemp)"
 set -euo pipefail
 read -s -p "Enter the passphrase (hidden): " passphrase
 echo
-secret_doc_name_encrypted="$(export passphrase ; echo "$secret_doc_name" | openssl enc -aes-256-cbc -pass env:passphrase -pbkdf2 -nosalt | basenc --base64url)"
+secret_doc_name_encrypted="$(echo "$secret_doc_name" | openssl enc -aes-256-cbc -pass pass:$passphrase -pbkdf2 -nosalt | basenc --base64url)"
 secret_doc_remote_path_quoted="$(printf "%q" "$secret_stash_remote_path/$secret_doc_name_encrypted")"
-secret_doc_local_path="$secret_stash_local_path/$secret_doc_name_encrypted"
 mkdir -p "$secret_stash_local_path"
+cd "$secret_stash_local_path"
 if scp "$secret_stash_remote_host_name:"$secret_doc_remote_path_quoted "$secret_doc_local_path"; then
     gpg --quiet --batch --yes --passphrase "$passphrase" --decrypt "$secret_doc_local_path" > "$temp"
 fi
