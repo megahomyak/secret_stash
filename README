@@ -1,15 +1,3 @@
 Like my "secret_doc", but with support for many documents, like in my "micronotes"
 
-Software requirements:
-* bash
-* openssl
-* ssh
-* scp
-* awk
-* gpg
-* GNU coreutils (basenc, cat, mktemp)
-
-Usage:
-./secret_stash.sh "$secret_doc_name"
-
 This is a personal tool so I would like to keep everything as lax as possible in the beginning
