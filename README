@@ -1,6 +1,8 @@
 Required vars: secret_stash_local_dir, secret_stash_remote_host (for SSH; like "username@server"), secret_stash_remote_dir
 Optional vars: secret_stash_connect_timeout (for SSH; default=10)
 
+You'll need to have a "key.txt" in $secret_stash_local_dir, that can be generated with "head -c 96 /dev/urandom | basenc --base64url --wrap 0 > key.txt"
+
 Dependencies:
 * bash
 * openssl
