@@ -1,21 +1,18 @@
 #!/bin/bash
 set -euo pipefail
-# required vars: secret_stash_local_path, secret_stash_remote_host, secret_stash_remote_path
 read -s -p "Enter your query (hidden): " query; echo
-ssh_remote() { while ssh -o ConnectTimeout=5 $secret_stash_remote_host "$@"; [ $? = 255 ]; do :; done }
-cd $secret_stash_local_path
+ssh_remote() { while ssh -o ConnectTimeout=${secret_stash_connect_timeout:-10} $secret_stash_remote_host "$@"; [ $? = 255 ]; do echo Reconnecting... >&2; done }
+cd $secret_stash_local_dir
 read -s -p "Enter the passphrase (hidden): " passphrase; echo
 fname=$(echo $query | openssl enc -aes-256-cbc -pass pass:$passphrase -pbkdf2 -nosalt | basenc --base64url)
 (temp_editing=$(mktemp); trap 'rm -f $temp_editing' EXIT
-    if ! ssh_remote "mkdir -p $secret_stash_remote_path && cat $secret_stash_remote_path/$fname 2>/dev/null" | gpg --quiet --batch --yes --passphrase $passphrase --output $temp_editing; then
-        gpg --quiet --batch --yes --passphrase $passphrase --output $temp_editing < $fname
-    fi
+    ssh_remote "mkdir -p $secret_stash_remote_dir && cat $secret_stash_remote_dir/$fname 2>/dev/null" | gpg --quiet --batch --yes --passphrase $passphrase --output $temp_editing || true
     $EDITOR $temp_editing
     if awk 'NF { exit 1 }' $temp_editing; then
         rm -f $fname
-        ssh_remote "rm -f $secret_stash_remote_path/$fname"
+        ssh_remote "rm -f $secret_stash_remote_dir/$fname"
     else
         gpg --quiet --symmetric --batch --yes --passphrase $passphrase --output $fname $temp_editing
-        ssh_remote "cat > $secret_stash_remote_path/$fname" < $fname
+        ssh_remote "cat > $secret_stash_remote_dir/$fname" < $fname
     fi
 )

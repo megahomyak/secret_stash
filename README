@@ -1,3 +1,6 @@
-Like my "secret_doc", but with support for many documents, like in my "micronotes"
+Required vars: secret_stash_local_dir, secret_stash_remote_host (for SSH; like "username@server"), secret_stash_remote_dir
+Optional vars: secret_stash_connect_timeout (for SSH; default=10)
+
+This is like my "secret_doc", but with support for many documents, like in my "micronotes"
 
 This is a personal tool so I would like to keep everything as lax as possible in the beginning
