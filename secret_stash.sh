@@ -16,11 +16,13 @@ escape() { printf "%q" "$1"; }
         fi
     )
     "$EDITOR" "$editing_temp"
-    if awk 'NF { exit 1 }' "$editing_temp"; then
-        rm -f "$local_file_path"
-        ssh_remote "rm -f $(escape "$remote_file_path")"
-    else
-        gpg --quiet --symmetric --batch --yes --passphrase "$passphrase" < "$editing_temp" > "$local_file_path"
-        ssh_remote "mkdir -p $(escape "$secret_stash_remote_dir") && cat > $(escape "$remote_file_path")" < "$local_file_path"
+    if [ -f "$editing_temp" ]; then
+        if awk 'NF { exit 1 }' "$editing_temp"; then
+            rm -f "$local_file_path"
+            ssh_remote "rm -f $(escape "$remote_file_path")"
+        else
+            gpg --quiet --symmetric --batch --yes --passphrase "$passphrase" < "$editing_temp" > "$local_file_path"
+            ssh_remote "mkdir -p $(escape "$secret_stash_remote_dir") && cat > $(escape "$remote_file_path")" < "$local_file_path"
+        fi
     fi
 )
