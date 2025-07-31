@@ -9,8 +9,12 @@ encrypted_file_name="$(echo "$query" | openssl enc -aes-256-cbc -pass "pass:$pas
 local_file_path="$secret_stash_local_dir/$encrypted_file_name"
 remote_file_path="$secret_stash_remote_dir/$encrypted_file_name"
 escape() { printf "%q" "$1"; }
-(trap 'rm -f "$editing_temp"' EXIT; editing_temp="$(mktemp)"
-    ssh_remote "cat $(escape "$remote_file_path") 2>/dev/null" | gpg --quiet --decrypt --batch --yes --passphrase "$passphrase" > "$editing_temp" 2>/dev/null || true
+(trap 'rm -f "$editing_temp"' EXIT; editing_temp="$local_file_path.editing"
+    (trap 'rm -f "$downloading_temp"' EXIT; downloading_temp="$local_file_path.downloading"
+        if ssh_remote "cat $(escape "$remote_file_path") 2>/dev/null" | gpg --quiet --decrypt --batch --yes --passphrase "$passphrase" > "$downloading_temp" 2>/dev/null; then
+            cp "$downloading_temp" "$editing_temp"
+        fi
+    )
     "$EDITOR" "$editing_temp"
     if awk 'NF { exit 1 }' "$editing_temp"; then
         rm -f "$local_file_path"
