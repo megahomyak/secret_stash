@@ -9,6 +9,6 @@ Dependencies:
 * ssh
 * awk
 * gpg
-* GNU coreutils (at least "basenc", "cat", "mktemp")
+* GNU coreutils (at least "basenc", "cat", "shred")
 
 This is like my "secret_doc", but with support for many documents, like in my "micronotes"
