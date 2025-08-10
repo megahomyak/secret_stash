@@ -9,8 +9,8 @@ encrypted_file_name="$(echo "$query" | openssl enc -aes-256-cbc -pass "pass:$pas
 local_file_path="$secret_stash_local_dir/$encrypted_file_name"
 remote_file_path="$secret_stash_remote_dir/$encrypted_file_name"
 escape() { printf "%q" "$1"; }
-(trap 'shred -fu "$editing_temp"' EXIT; editing_temp="$local_file_path.editing"
-    (trap 'shred -fu "$downloading_temp"' EXIT; downloading_temp="$local_file_path.downloading"
+(trap 'shred -fu "$editing_temp" || true' EXIT; editing_temp="$local_file_path.editing"
+    (trap 'shred -fu "$downloading_temp" || true' EXIT; downloading_temp="$local_file_path.downloading"
         if ssh_remote "cat $(escape "$remote_file_path") 2>/dev/null" | gpg --quiet --decrypt --batch --yes --passphrase "$passphrase" > "$downloading_temp" 2>/dev/null; then
             cp "$downloading_temp" "$editing_temp"
         fi
@@ -18,8 +18,8 @@ escape() { printf "%q" "$1"; }
     "$EDITOR" "$editing_temp"
     if [ -f "$editing_temp" ]; then
         if awk 'NF { exit 1 }' "$editing_temp"; then
-            shred -fu "$local_file_path"
-            ssh_remote "shred -fu $(escape "$remote_file_path")"
+            shred -fu "$local_file_path" || true
+            ssh_remote "shred -fu $(escape "$remote_file_path") || true"
         else
             gpg --quiet --symmetric --batch --yes --passphrase "$passphrase" < "$editing_temp" > "$local_file_path"
             ssh_remote "mkdir -p $(escape "$secret_stash_remote_dir") && cat > $(escape "$remote_file_path")" < "$local_file_path"
